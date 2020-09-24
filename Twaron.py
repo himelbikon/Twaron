@@ -91,8 +91,6 @@ class Ship:
 
 	def draw(self):
 		win.blit(self.ship_img, (self.x, self.y))
-		#for bullet in self.bullets:
-		#	bullet.draw()
 		for x in list(self.bul_dict):
 			x.draw()
 
@@ -107,7 +105,6 @@ class Ship:
 			x = self.x + self.ship_img.get_width()
 			y = self.y + self.ship_img.get_height() / 2 - self.bullet_img.get_height() / 2
 			bullet = Bullet(x, y, self.bullet_img)
-			#ran_num = random.randrange(90, 270)
 			self.bul_dict[bullet].append(deg)
 			self.bul_dict[bullet].append(vel)
 			self.bul_dict[bullet].append(dam)
@@ -147,8 +144,6 @@ class Villain(Ship):
 		self.bullet_img = villain_bullet_img
 		self.mask = pygame.mask.from_surface(self.ship_img)
 		
-
-
 class Bullet:
 	def __init__(self, x, y, img):
 		self.x = x
@@ -201,11 +196,12 @@ def follower(obj, target):
 	elif x >= 0 and y < 0:
 		extra = 2 * math.pi - math.atan(abs(y) / abs(x))
 	ang = math.degrees(extra)
-
 	return ang
 
-def shooter(con, choice, obj, target):
+ang_inc = 0
 
+def shooter(con, choice, obj, target):
+	global ang_inc
 	vel = 8
 	#choice = 500
 
@@ -215,6 +211,20 @@ def shooter(con, choice, obj, target):
 		elif choice == 1:
 			ang = follower(obj, target)
 			obj.shoot(1*60, ang, vel*2, 1)
+		elif choice == 2:
+			obj.shoot(1, ang_inc, 3+vel, 1)
+			ang_inc += 7
+		elif choice == 3:
+			for i in range(0, 361, 7):
+				obj.shoot(0.5*60, i, vel, 1)
+		elif choice == 4:
+			for i in range(130, 225, 10):
+				obj.shoot(0.8*60, i, vel, 1)
+			
+
+	else:
+		ang_inc = 0
+
 
 
 def main():
@@ -251,7 +261,7 @@ def main():
 
 	style_cho = 0
 	cho_start = 0
-	cho_stop = 2
+	cho_stop = 5
 
 
 	ran_cor_x = 300
