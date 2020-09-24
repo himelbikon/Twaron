@@ -1,5 +1,5 @@
 from collections import defaultdict
-import pygame, os, random, math
+import pygame, os, random, math, time   
 
 pygame.font.init()
 
@@ -143,6 +143,25 @@ class Villain(Ship):
 		self.ship_img = villain_img
 		self.bullet_img = villain_bullet_img
 		self.mask = pygame.mask.from_surface(self.ship_img)
+
+	def move_bullet(self, obj):
+		for bullet in list(self.bul_dict):
+			deg = self.bul_dict[bullet][0]
+			r = self.bul_dict[bullet][1]
+			dam = self.bul_dict[bullet][2]
+			bullet.move(r, deg)
+			if bullet.off_screen():
+				if bullet in self.bul_dict:
+					self.bul_dict.pop(bullet)
+			if bullet.collision(obj):
+				if bullet in self.bul_dict:
+					self.bul_dict.pop(bullet)
+				if obj.health - dam < 0:
+					obj.health = 0
+				else:
+					obj.health -= dam
+
+				obj.x = - 150 - obj.get_width()
 		
 class Bullet:
 	def __init__(self, x, y, img):
@@ -220,6 +239,8 @@ def shooter(con, choice, obj, target):
 		elif choice == 4:
 			for i in range(130, 225, 10):
 				obj.shoot(0.8*60, i, vel, 1)
+		elif choice == 5:
+			obj.shoot(0.1*60, random.randrange(160, 200), 1.5*vel, 1)
 			
 
 	else:
@@ -245,7 +266,7 @@ def main():
 	hero_vel = 5
 	hero_firing_delay = 0.08
 	hero_life = 3
-	hero_bul_dam = 0.01
+	hero_bul_dam = 0.05
 
 	bullet_vel = 8
 
@@ -261,13 +282,19 @@ def main():
 
 	style_cho = 0
 	cho_start = 0
-	cho_stop = 5
+	cho_stop = 6
 
 
 	ran_cor_x = 300
 	ran_cor_y = 300
 
+	gv = False
+	gv_des = 'You can rest in peace now','It was worth trying...'
+
 	main_font = pygame.font.SysFont('comicsans', 20)
+	gv_font = pygame.font.SysFont('Times New Roman', 100)
+	nor_font = pygame.font.SysFont('Courier', 30)
+
 
 	def redraw_window():
 		win.fill(white)
@@ -290,19 +317,21 @@ def main():
 		vil_life_label = main_font.render(f'Himel Bikon', 1, (10,10,255))
 		win.blit(vil_life_label, (800, 10))
 
+		gv_label = gv_font.render(f'Gave Over', 1, (255,0,0))
+		gv_des_label_0 = nor_font.render(f'{gv_des[0]}', 1, (255,10,10))
+		gv_des_label_1 = nor_font.render(f'{gv_des[1]}', 1, (255,10,10))
+
+
+		if gv == True:
+			win.blit(gv_label, (50, 100))
+			win.blit(gv_des_label_0, (250, 90 + gv_label.get_height()))
+			win.blit(gv_des_label_1, (280, 220))
+
+
+		
+
 		pygame.draw.rect(win, (255,0,0), (vil_life_label.get_width() + 806, 11, vil_hel_bar_wid*villain.health/100, vil_hel_bar_hei))
 		pygame.draw.rect(win, (150,150,150), (vil_life_label.get_width() + 805, 10, vil_hel_bar_wid + 2, vil_hel_bar_hei + 2), 2)
-
-		###
-		hero_cor_label = main_font.render(f'Hero {hero.x, hero.y}', 1, (151,124,145))
-		vil_cor_label = main_font.render(f'Villain {villain.x, villain.y}', 1, (167,145,126))
-		following_shoot_label = main_font.render(f'ran_cor {ran_cor_x, ran_cor_y}', 1, (148,245,178))
-
-		win.blit(hero_cor_label, (200, 10))
-		win.blit(vil_cor_label, (200, 25))
-		win.blit(following_shoot_label, (200, 40))
-		###
-
 
 		pygame.display.update()
 
@@ -310,6 +339,16 @@ def main():
 		clock.tick(fps)
 		redraw_window()
 
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				run = False
+
+		if hero.health < 1:
+			hero.x = -900
+			hero.y = -900
+			vil_shoot = False
+			gv = True
+			
 		run_obj_x, obj = obj_runner(run_obj_x, obj, 10, obj_list_1)
 		run_obj_x_2, obj_2 = obj_runner(run_obj_x_2, obj_2, 1, obj_list_2)
 
@@ -331,6 +370,9 @@ def main():
 			hero.shoot(hero_firing_delay * fps, 0, bullet_vel, hero_bul_dam) # time, degree, velocity, damage
 
 
+		if hero.x < -4:
+			hero.x += hero_vel-2
+			villain.bul_dict.clear()
 
 		if vil_pos_changer == True:
 			if abs(ran_cor_x - villain.x) <= vil_vel or abs(ran_cor_y - villain.y) <= vil_vel:
@@ -361,12 +403,25 @@ def main():
 		hero.move_bullet(villain) 
 
 
-	
- 
+def intro():
+	run = True
+	clock = pygame.time.Clock()
+
+	while run:
+		clock.tick(60)
+
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				run = False
+				pygame.quit()
+				quit()
 
+		win.fill(white)
+
+		win.blit(o1, (0, 0))
+		pygame.display.update()
+ 
+
+#intro()
 main()
 
 pygame.quit()
