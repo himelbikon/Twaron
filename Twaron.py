@@ -3,6 +3,9 @@ import pygame, os, random, math
 
 pygame.font.init()
 
+def desk():
+	pass
+
 
 def img_loader(file, size):
 	return pygame.transform.scale(pygame.image.load(os.path.join('twaron_data', file)), size)
