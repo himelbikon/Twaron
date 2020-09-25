@@ -5,6 +5,11 @@ import pygame, os, random, math, time
 pygame.font.init()
 pygame.mixer.init()
 
+# Sound
+mixer.music.load(os.path.join('twaron_data', 'background.wav'))
+#hero_sho_snd = mixer.Sound(os.path.join('twaron_data', 'hero_sho_snd.wav'))
+#vil_sho_snd = mixer.Sound(os.path.join('twaron_data', 'vil_sho_snd.wav'))
+
 def img_loader(file, size):
 	return pygame.transform.scale(pygame.image.load(os.path.join('twaron_data', file)), size)
 
@@ -111,6 +116,7 @@ class Ship:
 			self.bul_dict[bullet].append(deg)
 			self.bul_dict[bullet].append(vel)
 			self.bul_dict[bullet].append(dam)
+			#self.snd.play()
 			self.cool_down_time = 0
 		elif self.cool_down_time < time:
 			self.cool_down_time += 1
@@ -139,6 +145,7 @@ class Hero(Ship):
 		self.bullet_img = hero_bullet_img
 		self.mask = pygame.mask.from_surface(self.ship_img)
 		self.health = 3
+		#self.snd = hero_sho_snd
 
 class Villain(Ship):
 	def __init__(self, x, y, health=100):
@@ -146,6 +153,7 @@ class Villain(Ship):
 		self.ship_img = villain_img
 		self.bullet_img = villain_bullet_img
 		self.mask = pygame.mask.from_surface(self.ship_img)
+		#self.snd = vil_sho_snd
 
 	def move_bullet(self, obj):
 		for bullet in list(self.bul_dict):
@@ -164,7 +172,7 @@ class Villain(Ship):
 				else:
 					obj.health -= dam
 
-				obj.x = - 150 - obj.get_width()
+				obj.x = - 300 - obj.get_width()
 		
 class Bullet:
 	def __init__(self, x, y, img):
@@ -380,7 +388,7 @@ def main():
 		if keys[pygame.K_DOWN] and hero.y + hero.get_height() < height:
 			hero.y += hero_vel
 		if keys[pygame.K_SPACE]:
-			hero.shoot(hero_firing_delay * fps, 0, bullet_vel, 110*hero_bul_dam) # time, degree, velocity, damage
+			hero.shoot(hero_firing_delay * fps, 0, bullet_vel, hero_bul_dam) # time, degree, velocity, damage
 
 
 		if hero.x < -4:
@@ -464,7 +472,7 @@ def intro():
 	ebl_y = 400
 
 	
-	mixer.music.load(os.path.join('twaron_data', 'background.wav'))
+
 	mixer.music.play(-1)
 
 	while run:
@@ -505,7 +513,7 @@ def intro():
 		if pbl_x <= mouse[0] <= pbl_x + play_but_label.get_width() and pbl_y <= mouse[1] <= pbl_y + play_but_label.get_height():
 			play_but_col = on_but_col
 			if click[0] == 1:
-				mixer.music.stop()
+				#mixer.music.stop()
 				main()
 		else:
 			play_but_col = sim_but_col
