@@ -1,7 +1,9 @@
 from collections import defaultdict
-import pygame, os, random, math, time   
+from pygame import mixer
+import pygame, os, random, math, time
 
 pygame.font.init()
+pygame.mixer.init()
 
 def img_loader(file, size):
 	return pygame.transform.scale(pygame.image.load(os.path.join('twaron_data', file)), size)
@@ -9,6 +11,7 @@ def img_loader(file, size):
 width, height = 1200, 600
 black = 0, 0, 0
 white = 255, 255, 255
+
 
 # Frsit row
 tree = img_loader('tree.png', (200, 350))
@@ -295,6 +298,11 @@ def main():
 	gv_font = pygame.font.SysFont('Times New Roman', 100)
 	nor_font = pygame.font.SysFont('Courier', 30)
 
+	won_font = pygame.font.SysFont('Times New Roman', 40)
+	won_label = won_font.render(f'Himel Bikon is down, You have won!', 1, (255,0,0))
+
+	go_home_label = nor_font.render(f'Come to HQ, Major is waiting for you...', 1, (255,0,0))
+
 
 	def redraw_window():
 		win.fill(white)
@@ -310,6 +318,10 @@ def main():
 		if hero.health > 0:
 			for i in range(hero.health):
 				win.blit(hero_life_img, (30 + hero_life_img.get_width() * i, 10))
+
+		if villain.health <= 0:
+			win.blit(won_label, (width/2 - won_label.get_width()/2, 200))
+			win.blit(go_home_label, (width/2 - go_home_label.get_width()/2, 250))
 
 		villain.draw()
 		hero.draw()
@@ -341,13 +353,14 @@ def main():
 
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				run = False
+				quit()
 
 		if hero.health < 1:
 			hero.x = -900
 			hero.y = -900
 			vil_shoot = False
 			gv = True
+
 			
 		run_obj_x, obj = obj_runner(run_obj_x, obj, 10, obj_list_1)
 		run_obj_x_2, obj_2 = obj_runner(run_obj_x_2, obj_2, 1, obj_list_2)
@@ -367,34 +380,43 @@ def main():
 		if keys[pygame.K_DOWN] and hero.y + hero.get_height() < height:
 			hero.y += hero_vel
 		if keys[pygame.K_SPACE]:
-			hero.shoot(hero_firing_delay * fps, 0, bullet_vel, hero_bul_dam) # time, degree, velocity, damage
+			hero.shoot(hero_firing_delay * fps, 0, bullet_vel, 110*hero_bul_dam) # time, degree, velocity, damage
 
 
 		if hero.x < -4:
 			hero.x += hero_vel-2
 			villain.bul_dict.clear()
 
-		if vil_pos_changer == True:
-			if abs(ran_cor_x - villain.x) <= vil_vel or abs(ran_cor_y - villain.y) <= vil_vel:
-				vil_pos_changer = False
-				if vil_shoot_counter >= 6:
-					vil_shoot = not vil_shoot
-					vil_shoot_counter = 0
-					style_cho = random.randrange(cho_start, cho_stop)
+		if villain.health > 0:
+			if vil_pos_changer == True:
+				if abs(ran_cor_x - villain.x) <= vil_vel or abs(ran_cor_y - villain.y) <= vil_vel:
+					vil_pos_changer = False
+					if vil_shoot_counter >= 6:
+						vil_shoot = not vil_shoot
+						vil_shoot_counter = 0
+						style_cho = random.randrange(cho_start, cho_stop)
+					else:
+						vil_shoot_counter += 1
 				else:
-					vil_shoot_counter += 1
+					if ran_cor_x < villain.x:
+						villain.x -= vil_vel
+					elif ran_cor_x > villain.y:
+						villain.x += vil_vel
+					if ran_cor_y < villain.y:
+						villain.y -= vil_vel
+					elif ran_cor_y > villain.y:
+						villain.y += vil_vel
 			else:
-				if ran_cor_x < villain.x:
-					villain.x -= vil_vel
-				elif ran_cor_x > villain.y:
-					villain.x += vil_vel
-				if ran_cor_y < villain.y:
-					villain.y -= vil_vel
-				elif ran_cor_y > villain.y:
-					villain.y += vil_vel
-		else:
-			ran_cor_x, ran_cor_y = ran_cor(villain, ran_cor_x, ran_cor_y)
-			vil_pos_changer = True
+				ran_cor_x, ran_cor_y = ran_cor(villain, ran_cor_x, ran_cor_y)
+				vil_pos_changer = True
+		elif villain.health <= 0:
+			if villain.y < height - villain.get_height() + 100:
+				villain.y += 3
+				vil_shoot = False
+			elif villain.y >= height - villain.get_height() + 100 and villain.x > -900:
+				villain.x -= 2
+
+
 
 
 		shooter(vil_shoot, style_cho, villain, hero)
@@ -406,23 +428,101 @@ def main():
 def intro():
 	run = True
 	clock = pygame.time.Clock()
+	run_obj_x = 1300
+	run_obj_x_2 = 1250
+	obj = obj_selection(obj_list_1)
+	obj_2 = obj_selection(obj_list_2)
+
+	bg_x = 0
+
+	gr_x = 0
+	gr_2_x = gr.get_width()-100
+
+	main_font = pygame.font.SysFont('Courier', 30)
+	intro_font = pygame.font.SysFont('Times New Roman', 100)
+	nor_font = pygame.font.SysFont('Times New Roman', 60)
+
+	game_name_label = intro_font.render(f'Twaron', 1, (255,0,0))
+	gn_x = width/2 - game_name_label.get_width()/2
+	gn_y = 100
+
+	d_x = width / 2
+	d_y = gn_y + game_name_label.get_height()
+
+	des_list = ['Made by Himel Bikon by using Python and Pygame', 'www.github.com/himelbikon', 'www.facebook.com/himelbikon', 'www.instagram.com/bikonhimel']
+
+	sim_but_col = 112, 6, 9
+	play_but_col = sim_but_col
+	exit_but_col = sim_but_col
+	on_but_col = 255, 0, 7
+	play_but_label = nor_font.render(f'Play', 1, (play_but_col))
+	pbl_x = 300 - play_but_label.get_width() / 2
+	pbl_y = 400
+
+	exit_but_label = nor_font.render(f'Exit', 1, (exit_but_col))
+	ebl_x = width - pbl_x - exit_but_label.get_width() / 2
+	ebl_y = 400
+
+	
+	mixer.music.load(os.path.join('twaron_data', 'background.wav'))
+	mixer.music.play(-1)
 
 	while run:
 		clock.tick(60)
+
+
 
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				pygame.quit()
 				quit()
 
-		win.fill(white)
+		run_obj_x, obj = obj_runner(run_obj_x, obj, 10, obj_list_1)
+		run_obj_x_2, obj_2 = obj_runner(run_obj_x_2, obj_2, 1, obj_list_2)
+		bg_x = bg_runner(bg_x)
+		gr_x = gr_runner(gr_x, 1)
+		gr_2_x = gr_runner(gr_2_x, 1)
 
-		win.blit(o1, (0, 0))
+
+		# Draw section
+		win.blit(bg, (bg_x, -250))
+		win.blit(gr, (gr_x, height-150))
+		win.blit(gr_2, (gr_2_x, height-150))
+		win.blit(obj_2, (run_obj_x_2, 50))
+
+		win.blit(game_name_label, (gn_x, gn_y))
+
+		for i in range(len(des_list)):
+			des_label = main_font.render(f'{des_list[i]}', 1, (11, 156, 23))
+			win.blit(des_label, (d_x - des_label.get_width()/2 , d_y + i * des_label.get_height()))
+
+		win.blit(play_but_label, (pbl_x, pbl_y))
+		win.blit(exit_but_label, (ebl_x, ebl_y))
+
+		mouse = pygame.mouse.get_pos()
+		click = pygame.mouse.get_pressed()
+
+		if pbl_x <= mouse[0] <= pbl_x + play_but_label.get_width() and pbl_y <= mouse[1] <= pbl_y + play_but_label.get_height():
+			play_but_col = on_but_col
+			if click[0] == 1:
+				mixer.music.stop()
+				main()
+		else:
+			play_but_col = sim_but_col
+
+		if ebl_x <= mouse[0] <= ebl_x + exit_but_label.get_width() and ebl_y <= mouse[1] <= ebl_y + exit_but_label.get_height():
+			exit_but_col = on_but_col
+			if click[0] == 1:
+				quit()
+
+		else:
+			exit_but_col = sim_but_col
+
+		play_but_label = nor_font.render(f'Play', 1, (play_but_col))
+		exit_but_label = nor_font.render(f'Exit', 1, (exit_but_col))
 		pygame.display.update()
  
 
-#intro()
-main()
+intro()
 
-pygame.quit()
 quit()
